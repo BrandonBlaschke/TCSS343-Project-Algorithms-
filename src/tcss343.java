@@ -5,7 +5,7 @@ public class tcss343 {
 	
 	
 	
-	public static int[] bruteForce(final int theStart, final int theEnd, final int theCosts[][]) {
+	public static ArrayList<Integer> bruteForce(final int theStart, final int theEnd, final int theCosts[][]) {
 		
 		//Hold all Power sets 
 		ArrayList<ArrayList<Integer>> sets = new ArrayList<ArrayList<Integer>>(); 
@@ -40,9 +40,10 @@ public class tcss343 {
 			
 			boolean checkEnd = false; 
 			boolean checkStart = false;
-			
 			for (int j = 0; j < sets.get(i).size(); j++) {
+				
 				if(sets.get(i).get(j) == theEnd) {
+					
 					checkEnd = true;
 				}
 				if(sets.get(i).get(j) == theStart) {
@@ -52,33 +53,61 @@ public class tcss343 {
 			
 			if(!checkStart || !checkEnd) {
 				sets.remove(i); 
+				i--;
 			}
 		}
 		
-		//debugging purpose
-				for(int i = 0; i < sets.size(); i++) {
-					System.out.print("Set " + i + ". [");
-					for(int j = 0; j < sets.get(i).size(); j++) {
-						System.out.print(sets.get(i).get(j) + ",");
-					}
-					System.out.print("]" + '\n');
-				}
+		//Get the costs 
+		int[] costs = new int[sets.size()];
 		
-		return null;
+		for (int i = 0; i < sets.size(); i++) {
+			int total = 0;
+			for (int j = 1; j < sets.get(i).size(); j++) {
+				total += theCosts[sets.get(i).get(j-1)-1][sets.get(i).get(j)-1];
+			}
+			costs[i] = total; 
+		}
+		
+		//Find least of the sets 
+		int leastSet = 0;
+		int leastCost = costs[0]; 
+		
+		for (int i = 0; i < costs.length; i++) {
+			if (costs[i] < leastCost) {
+				leastSet = i;
+				leastCost = costs[i];
+			}
+		}
+		
+		// debugging purpose
+		for (int i = 0; i < sets.size(); i++) {
+			System.out.print("Set " + i + ". [");
+			for (int j = 0; j < sets.get(i).size(); j++) {
+				System.out.print(sets.get(i).get(j) + ",");
+			}
+			System.out.print("]" + " Cost: " + costs[i] + '\n');
+		}
+		
+		return sets.get(leastSet);
 	}
 
 	public static void main(String[] args) {
 		
-		int[][] costs = new int[][]{{ 1,  2,  3, 4,  5},
-			   {-1,  0,  2, 4,  6},
-			   {-1, -1,  0, 2,  5},
-			   {-1, -1, -1, 0,  2},
-			   {-1, -1, -1, -1, 0}};
-			   
-			   int i = 1; 
-			   int j = 5; 
-			   
-			   bruteForce(i, j, costs);
+		int[][] costs = new int[][]{{ 0,  2,  3, 7,  8},
+			   						{-1,  0,  2, 4,  6},
+			   						{-1, -1,  0, 2,  5},
+			   						{-1, -1, -1, 0,  2},
+			   						{-1, -1, -1, -1, 0}};
+
+		int i = 1;
+		int j = 5;
+
+		ArrayList<Integer> solution = bruteForce(i, j, costs);
+		System.out.print("Soultion is [");
+		for(int a = 0; a < solution.size(); a++) {
+			System.out.print(" " + solution.get(a));
+		}
+		System.out.print("]");
 	}
 
 }
