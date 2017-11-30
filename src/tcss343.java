@@ -1,11 +1,10 @@
-/**/
 
 
 import java.awt.List;
 import java.util.ArrayList;
 
 public class tcss343 {
-	
+/**/
 	
 	
 	public static ArrayList<Integer> bruteForce(final int theStart, final int theEnd, final int theCosts[][]) {
