@@ -3,9 +3,9 @@ import java.util.ArrayList;
 
 public class tcss343 {
 	
-	
-	
 	public static ArrayList<Integer> bruteForce(final int theStart, final int theEnd, final int theCosts[][]) {
+		
+		//TODO: Check for bad input 
 		
 		//Hold all Power sets 
 		ArrayList<ArrayList<Integer>> sets = new ArrayList<ArrayList<Integer>>(); 
@@ -40,6 +40,8 @@ public class tcss343 {
 			
 			boolean checkEnd = false; 
 			boolean checkStart = false;
+			
+			//for each element in the set check if it is the ending or starting element 
 			for (int j = 0; j < sets.get(i).size(); j++) {
 				
 				if(sets.get(i).get(j) == theEnd) {
@@ -51,6 +53,7 @@ public class tcss343 {
 				}
 			}
 			
+			//If the set has either starting or ending element remove it 
 			if(!checkStart || !checkEnd) {
 				sets.remove(i); 
 				i--;
@@ -60,9 +63,15 @@ public class tcss343 {
 		//Get the costs 
 		int[] costs = new int[sets.size()];
 		
+		//for each set
 		for (int i = 0; i < sets.size(); i++) {
 			int total = 0;
+			
+			//get the total cost for each move to a post 
 			for (int j = 1; j < sets.get(i).size(); j++) {
+				
+				//This is getting the set#i and element#j and - 1 because were putting that 
+				//value into an array and need to go down one. 
 				total += theCosts[sets.get(i).get(j-1)-1][sets.get(i).get(j)-1];
 			}
 			costs[i] = total; 
@@ -80,16 +89,77 @@ public class tcss343 {
 		}
 		
 		// debugging purpose
-		for (int i = 0; i < sets.size(); i++) {
+		/*for (int i = 0; i < sets.size(); i++) {
 			System.out.print("Set " + i + ". [");
 			for (int j = 0; j < sets.get(i).size(); j++) {
 				System.out.print(sets.get(i).get(j) + ",");
 			}
 			System.out.print("]" + " Cost: " + costs[i] + '\n');
-		}
+		}*/
 		
 		return sets.get(leastSet);
 	}
+	
+	public static int dynamic(final int theStart, final int theEnd, final int theCosts[][]) {
+		
+		//TODO: Check for bad input 
+		
+		//Table to keep track of total
+		int[] steps = new int[theEnd - theStart + 1];
+		
+		//Initial Starting values 
+		steps[0] = theCosts[theStart][theStart];
+		steps[1] = theCosts[theStart][theStart + 1]; 
+				
+		//For each step of 1->n check previous answers and get least		
+		for (int i = 2; i < theEnd - theStart + 1; i++) {
+			
+			//This is the leastStep, this will eventually be at the end of the loop the 
+			//total that was the smallest for that step. 
+			int leastStep = steps[i - 1] + theCosts[i-1][i];
+			
+			//Go through all the past steps previous lowest solutions
+			for (int j = 0; j < i; j++) {
+				
+				//Total cost for this one instance of a step
+				int total = theCosts[j][i] + steps[j];
+				
+				if (total <= leastStep) {
+					leastStep = total;
+				}
+			}
+			
+			//This step gets the lowest
+			steps[i] = leastStep; 
+		}
+		
+		/*for(int i: steps) {
+			System.out.println(i);
+		}*/
+		
+		/*int count = 0; 
+		for (int i = theStart; i < theEnd; i++) {
+			
+			int leastStep = theCosts[0][count]; 
+			System.out.println("LeasStep " + leastStep);
+			int countJ = 0;
+			
+			for (int j = theStart; j < i; j++) {
+				int total = theCosts[j][i] + steps[countJ];
+				System.out.println("Comparing total: " + total + " to leastStep: " + leastStep);
+				if (total <= leastStep) {
+					leastStep = total;
+				}
+				countJ++;
+			}
+			
+			steps[count] = leastStep; 
+			count++;
+		}*/
+		
+		return steps[steps.length - 1];
+	}
+	
 
 	public static void main(String[] args) {
 		
@@ -108,6 +178,9 @@ public class tcss343 {
 			System.out.print(" " + solution.get(a));
 		}
 		System.out.print("]");
+		
+		//TODO: Function to go back and retrace steps 
+		System.out.println("\nDynamic Solution is: " + dynamic(i,j,costs));
 	}
 
 }
