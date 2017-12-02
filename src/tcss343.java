@@ -1,16 +1,35 @@
 /**/
 
 import java.awt.List;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Scanner;
 
 public class tcss343 {	
+	
+	public static int[][] tempCosts;
+	public static int [][] inputList;
+	
+	
+	/*
+	 **************************************
+	 * 		      Brute Force             *
+	 **************************************
+	 */
+	
+	
 	public static ArrayList<Integer> bruteForce(final int theStart, final int theEnd, final int theCosts[][]) {
 		
 		//Hold all Power sets 
 		ArrayList<ArrayList<Integer>> sets = new ArrayList<ArrayList<Integer>>(); 
 		
 		//Hold the numbers in between theStart and theEnd  
-		int[] setNums = new int[5]; 
+		int[] setNums = new int[theEnd]; 
 		
 		//Length of the list
 		int length = setNums.length; 
@@ -77,7 +96,7 @@ public class tcss343 {
 				leastCost = costs[i];
 			}
 		}
-		
+		System.out.println("Brute Force");
 		// debugging purpose
 		for (int i = 0; i < sets.size(); i++) {
 			System.out.print("Set " + i + ". [");
@@ -89,24 +108,102 @@ public class tcss343 {
 		
 		return sets.get(leastSet);
 	}
+	
+	/*
+	 **************************************
+	 * 	    	Divide and Conquer        *
+	 **************************************
+	 */
+	
+	public static int divideAndConquer(int[][] inputCosts, int left, int right) {
+		ArrayList<Integer> costs = new ArrayList<Integer>();
+		//base case
+		if (left == right){
+			return 0;
+		
+		//
+		} else {
+			for (int i = left + 1; i <= right; i++){	
+				int cost = inputCosts[left][i] + divideAndConquer(inputCosts, i, right);
+//				System.out.println("costs[" +left+"]["+i+"]  " + inputCosts[left][i]);
+				costs.add(cost);
+				
+			}
+		}
+		
+		//find minimum cost in list
+		int cheapest = costs.get(0);
+		for (Integer i: costs) {
+			if (i < cheapest) cheapest = i;
+		}
+		return cheapest;
+	}
+	
+	
+	
+	
 
 	public static void main(String[] args) {
+		// Read input text file
+		ArrayList<Integer> input = new ArrayList<Integer>();
+		File file = new File("input.txt");
+		Scanner scanner = null;
+		try{
+			scanner = new Scanner (file);
+		} catch (FileNotFoundException e) {
+			
+		}
+		while (scanner.hasNext()) {
+			if (scanner.hasNextInt()) {
+				input.add(scanner.nextInt());
+				
+			} else if (scanner.hasNext("NA")) {
+				input.add(0);
+				scanner.next();
+			} else {
+				scanner.next();
+			}
+		}
 		
-		int[][] costs = new int[][]{{ 0,  2,  3, 7,  8},
-			   						{-1,  0,  2, 4,  6},
-			   						{-1, -1,  0, 2,  5},
-			   						{-1, -1, -1, 0,  2},
-			   						{-1, -1, -1, -1, 0}};
+		// Create the costs matrix
+		int size = (int) Math.sqrt(input.size());
+		int index = 0;
+		inputList = new int[size][size];
+		for (int i = 0; i < size && index < 17; i++) {
+			for (int j = 0; j < size; j++) {
+				inputList[i][j] = input.get(index);
+				index++;
+			}
+		}
+		
+//		tempCosts = new int[][]{{ 0,  2,  3, 7,  8},
+//			   				{-1,  0,  2, 4,  6},
+//			   				{-1, -1,  0, 2,  5},
+//			   				{-1, -1, -1, 0,  2},
+//			   				{-1, -1, -1, -1, 0}};
+			   				
+	    tempCosts = new int[][]{{ 0,  2,  3, 7},
+				   			    {-1,  0,  2, 4},
+				   			    {-1, -1,  0, 2},
+				   			    {-1, -1, -1, 0}};
 
 		int i = 1;
-		int j = 5;
-
-		ArrayList<Integer> solution = bruteForce(i, j, costs);
+		int n = tempCosts.length;
+		
+		//Brute Force
+		ArrayList<Integer> solution = bruteForce(i, n, tempCosts);
 		System.out.print("Soultion is [");
 		for(int a = 0; a < solution.size(); a++) {
 			System.out.print(" " + solution.get(a));
 		}
 		System.out.print("]");
+		
+		//Divide and conquer
+		
+		int result = divideAndConquer(inputList, 0, n - 1);
+		System.out.println("\n\nDivide and Conquer");
+		System.out.println("Cheapest:" + result);
+		
 	}
 
 }
