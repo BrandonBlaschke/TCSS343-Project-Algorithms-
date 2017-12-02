@@ -1,8 +1,23 @@
+
+/** TCSS343: Source code for Homework 4
+ * @author Brandon Blascke and Hasnah Said
+ */
+
 import java.awt.List;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Deque;
 
 public class tcss343 {
 	
+	/** Brute force algorithm for solving the post problem 
+	 * 
+	 * @param theStart Starting post
+	 * @param theEnd Ending post
+	 * @param theCosts 2D array for the cost of post x -> y
+	 * @return Array list of all the steps for the solution
+	 */
 	public static ArrayList<Integer> bruteForce(final int theStart, final int theEnd, final int theCosts[][]) {
 		
 		//TODO: Check for bad input 
@@ -100,74 +115,136 @@ public class tcss343 {
 		return sets.get(leastSet);
 	}
 	
-	public static int dynamic(final int theStart, final int theEnd, final int theCosts[][]) {
+	/** Dynamic programming solution to the problem
+	 * 
+	 * @param theStart Starting post
+	 * @param theEnd Ending post
+	 * @param theCosts 2D array for the cost of post x -> y
+	 * @return Stack that where the head is the total cost for the solution and the rest being the steps in took to 
+	 * get the final solution
+	 */
+	public static Deque<Integer> dynamic(final int theStart, final int theEnd, final int theCosts[][]) {
 		
 		//TODO: Check for bad input 
 		
-		//Table to keep track of total
-		int[] steps = new int[theEnd - theStart + 1];
+		//Difference from start and the end to get the total length 
+		final int totalLength = theEnd - theStart + 1;
+		
+		//Array of all the post numbers from start to end 
+		int[] posts = new int[totalLength];
+		for (int i = 0; i < totalLength; i++) {
+			posts[i] = i + theStart; 
+		}
+		
+		//Table to keep track of least total for each step
+		int[] leastTotals = new int[totalLength];
+		
+		//Keep track of the previous step to get that step. 
+		int[] prevSteps = new int[totalLength];
+		
+		//Initial starting values for prevSteps
+		prevSteps[0] = 0; 
+		prevSteps[1] = theStart; 
 		
 		//Initial Starting values 
-		steps[0] = theCosts[theStart][theStart];
-		steps[1] = theCosts[theStart][theStart + 1]; 
+		leastTotals[0] = theCosts[theStart][theStart];
+		leastTotals[1] = theCosts[theStart][theStart + 1]; 
 				
 		//For each step of 1->n check previous answers and get least		
 		for (int i = 2; i < theEnd - theStart + 1; i++) {
 			
 			//This is the leastStep, this will eventually be at the end of the loop the 
 			//total that was the smallest for that step. 
-			int leastStep = steps[i - 1] + theCosts[i-1][i];
+			int leastStep = leastTotals[i - 1] + theCosts[i-1][i];
+			prevSteps[i] = i;
 			
 			//Go through all the past steps previous lowest solutions
 			for (int j = 0; j < i; j++) {
 				
 				//Total cost for this one instance of a step
-				int total = theCosts[j][i] + steps[j];
+				int total = theCosts[j][i] + leastTotals[j];
 				
 				if (total <= leastStep) {
 					leastStep = total;
+					prevSteps[i] = j + 1;
 				}
 			}
 			
 			//This step gets the lowest
-			steps[i] = leastStep; 
+			leastTotals[i] = leastStep; 
 		}
 		
-		/*for(int i: steps) {
-			System.out.println(i);
+		//Debugging, shows the tables for finding the solution 
+		/*System.out.println("\n Posts");
+		for(int i: posts) {
+			System.out.print(" " + i);
+		}
+		
+		System.out.println("\n Least Totals");
+		for(int i: leastTotals) {
+			System.out.print(" " + i);
+		}
+		
+		System.out.println("\nPrevious Steps");
+		for(int i: prevSteps) {
+			System.out.print(" " + i);
 		}*/
 		
-		/*int count = 0; 
-		for (int i = theStart; i < theEnd; i++) {
-			
-			int leastStep = theCosts[0][count]; 
-			System.out.println("LeasStep " + leastStep);
-			int countJ = 0;
-			
-			for (int j = theStart; j < i; j++) {
-				int total = theCosts[j][i] + steps[countJ];
-				System.out.println("Comparing total: " + total + " to leastStep: " + leastStep);
-				if (total <= leastStep) {
-					leastStep = total;
-				}
-				countJ++;
-			}
-			
-			steps[count] = leastStep; 
-			count++;
-		}*/
-		
-		return steps[steps.length - 1];
+		return retrace(prevSteps, posts, leastTotals[leastTotals.length - 1]);
 	}
 	
+	/** Retraces the steps from the dynamic solution
+	 * 
+	 * @param thePrevSteps Previous Steps is the array of steps, with each step being the previous step it took to get there
+	 * @param thePosts Posts from the start to the end numbered
+	 * @param theLeastTotal The least total cost for the last post or ending post
+	 * @return A Stack starting with the least total for the solution and the rest being the steps to get there
+	 */
+	public static Deque<Integer> retrace(final int[] thePrevSteps, final int[] thePosts, final int theLeastTotal) {
+		
+		//Create stack and the current step, which is the last step done 
+		Deque<Integer> stack = new ArrayDeque<Integer>();
+		int currentStep = thePosts.length;
+		
+		//Loop until we reach the starting post
+		while (currentStep != 0) {
+			
+			//Push the post to the stack and go down to the previous step for that step
+			stack.push(thePosts[currentStep - 1]);
+			currentStep = thePrevSteps[currentStep - 1];
+		}
+		
+		//This is the total cost for the solution, it is the head of the stack
+		stack.push(theLeastTotal);
+		return stack; 
+	}
+	
+	/** Prints the stack from retrace to show the final solution and total cost
+	 * @param theStack Stack to be printed with total cost
+	 */
+	public static void printStack(final Deque<Integer> theStack) {
+		
+		//get total
+		int tempForTotal = theStack.pop();
+		
+		//Print posts 
+		System.out.print("\nFinal solution for dynamic:");
+		for (int i = 0; i < theStack.size(); i++) {
+			System.out.print(" " + theStack.peek());
+			theStack.pop();
+			i--;
+		}
+		
+		System.out.print(" Total is " + tempForTotal);
+	}
 
 	public static void main(String[] args) {
 		
-		int[][] costs = new int[][]{{ 0,  2,  3, 7,  8},
-			   						{-1,  0,  2, 4,  6},
-			   						{-1, -1,  0, 2,  5},
-			   						{-1, -1, -1, 0,  2},
-			   						{-1, -1, -1, -1, 0}};
+		int[][] costs = new int[][]{{0, 2, 3, 7, 8},
+			   						{0, 0, 2, 4, 6},
+			   						{0, 0, 0, 2, 5},
+			   						{0, 0, 0, 0, 2},
+			   						{0, 0, 0, 0, 0}};
 
 		int i = 1;
 		int j = 5;
@@ -179,8 +256,8 @@ public class tcss343 {
 		}
 		System.out.print("]");
 		
-		//TODO: Function to go back and retrace steps 
-		System.out.println("\nDynamic Solution is: " + dynamic(i,j,costs));
+		//Print Dynamic solution
+		printStack(dynamic(i,j,costs));
 	}
 
 }
