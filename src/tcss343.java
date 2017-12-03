@@ -26,7 +26,7 @@ public class tcss343 {
 		ArrayList<ArrayList<Integer>> sets = new ArrayList<ArrayList<Integer>>(); 
 		
 		//Hold the numbers in between theStart and theEnd  
-		int[] setNums = new int[5]; 
+		int[] setNums = new int[theEnd - theStart + 1]; 
 		
 		//Length of the list
 		int length = setNums.length; 
@@ -112,6 +112,8 @@ public class tcss343 {
 			System.out.print("]" + " Cost: " + costs[i] + '\n');
 		}*/
 		
+		//Adding the total for the least set 
+		sets.get(leastSet).add((costs[leastSet]));
 		return sets.get(leastSet);
 	}
 	
@@ -245,19 +247,28 @@ public class tcss343 {
 			   						{0, 0, 0, 2, 5},
 			   						{0, 0, 0, 0, 2},
 			   						{0, 0, 0, 0, 0}};
+			   						
+		//Should be 1 3 4 5 6 Total is 9
+		int[][] costs2 = new int[][]{{0, 2, 3, 7, 10, 12},
+				                     {0, 0, 2, 4, 8, 11},
+				                     {0, 0, 0, 2, 5, 9},
+				                     {0, 0, 0, 0, 2, 6},
+				                     {0, 0, 0, 0, 0, 2},
+				                     {0, 0, 0, 0, 0, 0}};
 
 		int i = 1;
-		int j = 5;
+		int j = 6;
 
-		ArrayList<Integer> solution = bruteForce(i, j, costs);
+		ArrayList<Integer> solution = bruteForce(i, j, costs2);
 		System.out.print("Soultion is [");
-		for(int a = 0; a < solution.size(); a++) {
+		for(int a = 0; a < solution.size() - 1; a++) {
 			System.out.print(" " + solution.get(a));
 		}
-		System.out.print("]");
 		
+		System.out.print("]" + " Total is " + solution.get(solution.size() - 1));
+	
 		//Print Dynamic solution
-		printStack(dynamic(i,j,costs));
+		printStack(dynamic(i,j,costs2));
 	}
 
 }
