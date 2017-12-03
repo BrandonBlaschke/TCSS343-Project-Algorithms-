@@ -157,7 +157,7 @@ public class tcss343 {
 	 * @param theName name of the file.
 	 * @param theSize number of posts.
 	 * @param theType increasing: for random increasing costs.
-	 * 				  random:     for random positive costs.
+	 * 				  random: for random positive costs.
 	 */	
 	public static void generateCostTable(String theName, int theSize, String theType) {
 		try {
@@ -248,7 +248,16 @@ public class tcss343 {
 		}
 	}
 	
-
+	
+	/***
+	 * Main method.
+	 * 
+	 * To run from terminal: 
+	 * 				javac tcss343.java 		 (compile the program)
+	 * 				java tcss343 < input.txt (execute the program with given input.txt)
+	 * 			OR  java tcss343 generate    (execute the program by generate a cost table)
+	 * @param theArgs args to be passed into main.
+	 */
 	public static void main(String... theArgs) {
 		
 		//TODO: Add running time.
@@ -283,12 +292,27 @@ public class tcss343 {
 		}
 		
 		/* Generate a cost table using the arguments the user passes in.
-		 * Terminal Command: java tcss343 filename.txt table_size table_type.		
+		 * Terminal Command: java tcss343 new.		
 		 */
 		else {
-			String filename = theArgs[0];
-			int tableSize = Integer.parseInt(theArgs[1]);
-			String tableType = theArgs[2];
+//			String filename = theArgs[0];
+//			int tableSize = Integer.parseInt(theArgs[1]);
+//			String tableType = theArgs[2];
+			
+			System.out.print("Enter filename: ");
+			Scanner sc = new Scanner(System.in);
+			String filename = sc.nextLine();
+			
+			System.out.print("Enter the size of the table: ");
+			int tableSize = 0;
+			try{
+				tableSize = Integer.parseInt(sc.nextLine());
+			} catch (IllegalArgumentException e) {
+				System.out.println("Please enter a valid number");
+			}
+			
+			System.out.print("Enter table type (increaseing/random): ");
+			String tableType = sc.nextLine();
 
 			generateCostTable(filename, tableSize, tableType);
 			createCostTable(filename);
@@ -298,7 +322,7 @@ public class tcss343 {
 		int i = 1;
 		int n = inputList.length;
 		
-		System.out.println("Brute Force");
+		System.out.println("\nBrute Force");
 
 		ArrayList<Integer> solution = bruteForce(i, n, inputList);
 		System.out.print("Soultion is [");
@@ -311,7 +335,7 @@ public class tcss343 {
 		
 		int result = divideAndConquer(inputList, 0, n - 1);
 		
-		System.out.println("\n\nDivide and Conquer");
+		System.out.println("\nDivide and Conquer");
 		System.out.println("Cheapest:" + result);
 
 	}
