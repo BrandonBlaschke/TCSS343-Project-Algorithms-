@@ -15,7 +15,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -29,11 +31,13 @@ public class tcss343 {
 	
 	public static ArrayList<Integer> bruteForce(final int theStart, final int theEnd, final int theCosts[][]) {
 		
+		//TODO: Check for bad input 
+		
 		//Hold all Power sets 
 		ArrayList<ArrayList<Integer>> sets = new ArrayList<ArrayList<Integer>>(); 
 		
 		//Hold the numbers in between theStart and theEnd  
-		int[] setNums = new int[theEnd]; 
+		int[] setNums = new int[theEnd - theStart + 1]; 
 		
 		//Length of the list
 		int length = setNums.length; 
@@ -62,6 +66,8 @@ public class tcss343 {
 			
 			boolean checkEnd = false; 
 			boolean checkStart = false;
+			
+			//for each element in the set check if it is the ending or starting element 
 			for (int j = 0; j < sets.get(i).size(); j++) {
 				
 				if(sets.get(i).get(j) == theEnd) {
@@ -73,6 +79,7 @@ public class tcss343 {
 				}
 			}
 			
+			//If the set has either starting or ending element remove it 
 			if(!checkStart || !checkEnd) {
 				sets.remove(i); 
 				i--;
@@ -82,9 +89,15 @@ public class tcss343 {
 		//Get the costs 
 		int[] costs = new int[sets.size()];
 		
+		//for each set
 		for (int i = 0; i < sets.size(); i++) {
 			int total = 0;
+			
+			//get the total cost for each move to a post 
 			for (int j = 1; j < sets.get(i).size(); j++) {
+				
+				//This is getting the set#i and element#j and - 1 because were putting that 
+				//value into an array and need to go down one. 
 				total += theCosts[sets.get(i).get(j-1)-1][sets.get(i).get(j)-1];
 			}
 			costs[i] = total; 
@@ -101,15 +114,17 @@ public class tcss343 {
 			}
 		}
 		
-//		// debugging purpose
-//		for (int i = 0; i < sets.size(); i++) {
-//			System.out.print("Set " + i + ". [");
-//			for (int j = 0; j < sets.get(i).size(); j++) {
-//				System.out.print(sets.get(i).get(j) + ",");
-//			}
-//			System.out.print("]" + " Cost: " + costs[i] + '\n');
-//		}
+		// debugging purpose
+		/*for (int i = 0; i < sets.size(); i++) {
+			System.out.print("Set " + i + ". [");
+			for (int j = 0; j < sets.get(i).size(); j++) {
+				System.out.print(sets.get(i).get(j) + ",");
+			}
+			System.out.print("]" + " Cost: " + costs[i] + '\n');
+		}*/
 		
+		//Adding the total for the least set 
+		sets.get(leastSet).add((costs[leastSet]));
 		return sets.get(leastSet);
 	}
 	
@@ -148,6 +163,129 @@ public class tcss343 {
 		}
 		return cheapest;
 	}
+	/** Dynamic programming solution to the problem
+	 * 
+	 * @param theStart Starting post
+	 * @param theEnd Ending post
+	 * @param theCosts 2D array for the cost of post x -> y
+	 * @return Stack that where the head is the total cost for the solution and the rest being the steps in took to 
+	 * get the final solution
+	 */
+	public static Deque<Integer> dynamic(final int theStart, final int theEnd, final int theCosts[][]) {
+		
+		//TODO: Check for bad input 
+		
+		//Difference from start and the end to get the total length 
+		final int totalLength = theEnd - theStart + 1;
+		
+		//Array of all the post numbers from start to end 
+		int[] posts = new int[totalLength];
+		for (int i = 0; i < totalLength; i++) {
+			posts[i] = i + theStart; 
+		}
+		
+		//Table to keep track of least total for each step
+		int[] leastTotals = new int[totalLength];
+		
+		//Keep track of the previous step to get that step. 
+		int[] prevSteps = new int[totalLength];
+		
+		//Initial starting values for prevSteps
+		prevSteps[0] = 0; 
+		prevSteps[1] = theStart; 
+		
+		//Initial Starting values 
+		leastTotals[0] = theCosts[theStart][theStart];
+		leastTotals[1] = theCosts[theStart][theStart + 1]; 
+				
+		//For each step of 1->n check previous answers and get least		
+		for (int i = 2; i < theEnd - theStart + 1; i++) {
+			
+			//This is the leastStep, this will eventually be at the end of the loop the 
+			//total that was the smallest for that step. 
+			int leastStep = leastTotals[i - 1] + theCosts[i-1][i];
+			prevSteps[i] = i;
+			
+			//Go through all the past steps previous lowest solutions
+			for (int j = 0; j < i; j++) {
+				
+				//Total cost for this one instance of a step
+				int total = theCosts[j][i] + leastTotals[j];
+				
+				if (total <= leastStep) {
+					leastStep = total;
+					prevSteps[i] = j + 1;
+				}
+			}
+			
+			//This step gets the lowest
+			leastTotals[i] = leastStep; 
+		}
+		
+		//Debugging, shows the tables for finding the solution 
+		/*System.out.println("\n Posts");
+		for(int i: posts) {
+			System.out.print(" " + i);
+		}
+		
+		System.out.println("\n Least Totals");
+		for(int i: leastTotals) {
+			System.out.print(" " + i);
+		}
+		
+		System.out.println("\nPrevious Steps");
+		for(int i: prevSteps) {
+			System.out.print(" " + i);
+		}*/
+		
+		return retrace(prevSteps, posts, leastTotals[leastTotals.length - 1]);
+	}
+	
+	/** Retraces the steps from the dynamic solution
+	 * 
+	 * @param thePrevSteps Previous Steps is the array of steps, with each step being the previous step it took to get there
+	 * @param thePosts Posts from the start to the end numbered
+	 * @param theLeastTotal The least total cost for the last post or ending post
+	 * @return A Stack starting with the least total for the solution and the rest being the steps to get there
+	 */
+	public static Deque<Integer> retrace(final int[] thePrevSteps, final int[] thePosts, final int theLeastTotal) {
+		
+		//Create stack and the current step, which is the last step done 
+		Deque<Integer> stack = new ArrayDeque<Integer>();
+		int currentStep = thePosts.length;
+		
+		//Loop until we reach the starting post
+		while (currentStep != 0) {
+			
+			//Push the post to the stack and go down to the previous step for that step
+			stack.push(thePosts[currentStep - 1]);
+			currentStep = thePrevSteps[currentStep - 1];
+		}
+		
+		//This is the total cost for the solution, it is the head of the stack
+		stack.push(theLeastTotal);
+		return stack; 
+	}
+	
+	/** Prints the stack from retrace to show the final solution and total cost
+	 * @param theStack Stack to be printed with total cost
+	 */
+	public static void printStack(final Deque<Integer> theStack) {
+		
+		//get total
+		int tempForTotal = theStack.pop();
+		
+		//Print posts 
+		System.out.print("\nFinal solution for dynamic:");
+		for (int i = 0; i < theStack.size(); i++) {
+			System.out.print(" " + theStack.peek());
+			theStack.pop();
+			i--;
+		}
+		
+		System.out.print("\nTotal is " + tempForTotal + "\n");
+	}
+
 	
 	/**
 	 * Generate a cost table of size n x n where n: 25, 50, 100, 200, 400, 800
@@ -259,6 +397,7 @@ public class tcss343 {
 	 * @param theArgs args to be passed into main.
 	 */
 	public static void main(String... theArgs) {
+		long bfStart, bfEnd, dcStart, dcEnd, dynamicStart, dynamicEnd;
 		
 		//TODO: Add running time.
 		
@@ -292,7 +431,7 @@ public class tcss343 {
 		}
 		
 		/* Generate a cost table using the arguments the user passes in.
-		 * Terminal Command: java tcss343 new.		
+		 * Terminal Command: java tcss343 generate.		
 		 */
 		else {
 //			String filename = theArgs[0];
@@ -322,21 +461,35 @@ public class tcss343 {
 		int i = 1;
 		int n = inputList.length;
 		
+		/* Brute Force */
 		System.out.println("\nBrute Force");
-
+		bfStart = System.nanoTime();
 		ArrayList<Integer> solution = bruteForce(i, n, inputList);
-		System.out.print("Soultion is [");
-		for(int a = 0; a < solution.size(); a++) {
+		bfEnd = System.nanoTime();
+		System.out.print("\nSoultion is [");
+		for(int a = 0; a < solution.size() - 1; a++) {
 			System.out.print(" " + solution.get(a));
 		}
-		System.out.print("]\n");
+		System.out.print("]");
+		System.out.println("\nTotal is " + solution.get(solution.size() - 1));
+		System.out.println("Brute force running time: " + (bfEnd - bfStart)/ 1000000 + " ms");
 		
-		//Divide and conquer
 		
+		/* Divide and Conquer */
+		dcStart = System.nanoTime();
 		int result = divideAndConquer(inputList, 0, n - 1);
-		
+		dcEnd = System.nanoTime();
 		System.out.println("\nDivide and Conquer");
 		System.out.println("Cheapest:" + result);
+		System.out.println("Divide and Conquer running time: " + (dcEnd - dcStart)/ 1000000 + " ms");
+		
+		
+		/* Dynamic */
+		dynamicStart = System.nanoTime();
+		printStack(dynamic(i,n,inputList));
+		dynamicEnd = System.nanoTime();
+		
+		System.out.println("Dynamic running time: " + (dynamicEnd - dynamicStart)/ 1000000 + " ms");
 
 	}
 
