@@ -145,24 +145,30 @@ public class tcss343 {
 		if (theLeft == theRight){
 			return 0;
 			} else {
-			for (int i = theLeft + 1; i <= theRight; i++) {
 				
-				int rCost = divideAndConquer(inputCosts, i, theRight);
+				for (int i = theLeft + 1; i <= theRight; i++) {
 				
-				int cost = inputCosts[theLeft][i] + rCost;
-				
-//				System.out.println("costs[" +(left + 1)+"]["+ (i+1) +"]  " + inputCosts[left][i]);
-//				System.out.print("\t" + cost + "\t" );
-				costs.add(cost);	
+//					int rCost = divideAndConquer(inputCosts, i, theRight);
+					
+					int cost = inputCosts[theLeft][i] + divideAndConquer(inputCosts, i, theRight);
+					
+//					System.out.println("costs[" +(theLeft + 1)+"]["+ (i+1) +"] ");
+
+					costs.add(cost);	
 			}
 		}
-		//find minimum cost in list
+		//find minimum cost
 		int cheapest = costs.get(0);
 		for (Integer i: costs) {
 			if (i < cheapest) cheapest = i;
 		}
-		return cheapest;
+		return cheapest;	
 	}
+	
+
+	
+
+	
 	/** Dynamic programming solution to the problem
 	 * 
 	 * @param theStart Starting post
@@ -378,7 +384,7 @@ public class tcss343 {
 		int size = (int) Math.sqrt(input.size());
 		int index = 0;
 		inputList = new int[size][size];
-		for (int i = 0; i < size && index < 17; i++) {
+		for (int i = 0; i < size && index < input.size(); i++) {
 			for (int j = 0; j < size; j++) {
 				inputList[i][j] = input.get(index);
 				index++;
@@ -393,20 +399,20 @@ public class tcss343 {
 	 * To run from terminal: 
 	 * 				javac tcss343.java 		 (compile the program)
 	 * 				java tcss343 < input.txt (execute the program with given input.txt)
-	 * 			OR  java tcss343 generate    (execute the program by generate a cost table)
+	 * 			OR  java tcss343 generate    (execute the program by generating a cost table)
 	 * @param theArgs args to be passed into main.
 	 */
 	public static void main(String... theArgs) {
 		long bfStart, bfEnd, dcStart, dcEnd, dynamicStart, dynamicEnd;
-		
-		//TODO: Add running time.
+		ArrayList<Integer> input = new ArrayList<Integer>();
 		
 		/* Use the file that the user specifies in terminal.*/
 		if (theArgs.length == 0) {
 			// Read input text file
-			ArrayList<Integer> input = new ArrayList<Integer>();
+		
 			Scanner scanner = new Scanner (System.in);
 			while (scanner.hasNext()) {
+				System.out.println(scanner);
 				if (scanner.hasNextInt()) {
 					input.add(scanner.nextInt());
 				} else if (scanner.hasNext("NA")) {
@@ -418,11 +424,13 @@ public class tcss343 {
 			}
 			scanner.close();
 			
+
+			
 			/*Create the cost table. */
 			int size = (int) Math.sqrt(input.size());
 			int index = 0;
 			inputList = new int[size][size];
-			for (int i = 0; i < size && index < 17; i++) {
+			for (int i = 0; i < size && index < input.size(); i++) {
 				for (int j = 0; j < size; j++) {
 					inputList[i][j] = input.get(index);
 					index++;
@@ -434,9 +442,6 @@ public class tcss343 {
 		 * Terminal Command: java tcss343 generate.		
 		 */
 		else {
-//			String filename = theArgs[0];
-//			int tableSize = Integer.parseInt(theArgs[1]);
-//			String tableType = theArgs[2];
 			
 			System.out.print("Enter filename: ");
 			Scanner sc = new Scanner(System.in);
@@ -456,8 +461,19 @@ public class tcss343 {
 			generateCostTable(filename, tableSize, tableType);
 			createCostTable(filename);
 		}
+		
+		
 
 		
+//		for (int a = 0; a < inputList.length; a++) {
+//			for (int b = 0; b < inputList.length; b++) {
+//				System.out.print(inputList[a][b] + "  ");
+//			}
+//			System.out.println();
+//		}
+		
+
+		/* Algorithms */
 		int i = 1;
 		int n = inputList.length;
 		
@@ -466,7 +482,7 @@ public class tcss343 {
 		bfStart = System.nanoTime();
 		ArrayList<Integer> solution = bruteForce(i, n, inputList);
 		bfEnd = System.nanoTime();
-		System.out.print("\nSoultion is [");
+		System.out.print("Soultion is [");
 		for(int a = 0; a < solution.size() - 1; a++) {
 			System.out.print(" " + solution.get(a));
 		}
@@ -480,11 +496,12 @@ public class tcss343 {
 		int result = divideAndConquer(inputList, 0, n - 1);
 		dcEnd = System.nanoTime();
 		System.out.println("\nDivide and Conquer");
-		System.out.println("Cheapest:" + result);
+		System.out.println("Cheapest: " + result);
 		System.out.println("Divide and Conquer running time: " + (dcEnd - dcStart)/ 1000000 + " ms");
 		
 		
-		/* Dynamic */
+
+//		/* Dynamic */
 		dynamicStart = System.nanoTime();
 		printStack(dynamic(i,n,inputList));
 		dynamicEnd = System.nanoTime();
