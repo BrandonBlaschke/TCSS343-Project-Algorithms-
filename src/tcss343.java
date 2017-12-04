@@ -395,7 +395,7 @@ public class tcss343 {
 	
 	public static void main(String... theArgs) {
 		
-		/*long bfStart, bfEnd, dcStart, dcEnd, dynamicStart, dynamicEnd;
+		long bfStart, bfEnd, dcStart, dcEnd, dynamicStart, dynamicEnd;
 		
 		//TODO: Add running time.
 		
@@ -428,9 +428,9 @@ public class tcss343 {
 			}
 		}
 		
-		 Generate a cost table using the arguments the user passes in.
+		 /*Generate a cost table using the arguments the user passes in.
 		 * Terminal Command: java tcss343 generate.		
-		 
+		 */
 		else {
 //			String filename = theArgs[0];
 //			int tableSize = Integer.parseInt(theArgs[1]);
@@ -458,6 +458,19 @@ public class tcss343 {
 		
 		int i = 1;
 		int n = inputList.length;
+		
+		try {
+		for(int b = 0; i < inputList.length; b++) {
+			System.out.println();
+			for (int c = 0; c < inputList[b].length; c++) {
+				System.out.print(" " + inputList[b][c]);
+			}
+			
+			System.out.print(" total is " + inputList[b].length);
+		}
+		} catch (Exception e) {
+			
+		}
 		
 		//Brute Force 
 		System.out.println("\nBrute Force");
@@ -487,7 +500,7 @@ public class tcss343 {
 		printStack(dynamic(i,n,inputList));
 		dynamicEnd = System.nanoTime();
 		
-		System.out.println("Dynamic running time: " + (dynamicEnd - dynamicStart)/ 1000000 + " ms");*/
+		System.out.println("Dynamic running time: " + (dynamicEnd - dynamicStart)/ 1000000 + " ms");
 		
 		int[][] costs = new int[][]{{0, 2, 3, 7, 8},
 			   						{0, 0, 2, 4, 6},
@@ -518,7 +531,7 @@ public class tcss343 {
         
 		int s = 1;
 		int e = 6;
-
+		
 		ArrayList<Integer> bruteSol = bruteForce(s, e, costs3);
 		System.out.print("Soultion is [");
 		for(int a = 0; a < bruteSol.size() - 1; a++) {
