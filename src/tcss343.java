@@ -4,12 +4,24 @@
  */
 
 import java.awt.List;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
+import java.util.Random;
+import java.util.Scanner;
 
 public class tcss343 {
+	
+	private static Random random = new Random(); 
+	
+	public static int[][] tempCosts;
+	public static int[][] inputList; 
 	
 	/** Brute force algorithm for solving the post problem 
 	 * 
@@ -29,12 +41,12 @@ public class tcss343 {
 		int[] setNums = new int[theEnd - theStart + 1]; 
 		
 		//Length of the list
-		int length = setNums.length; 
+		int length = theEnd; 
 		
 		//Make set of all posts 
-		for(int i = 0; i < theEnd; i++) {
+		for(int i = 0; i < theEnd - theStart + 1; i++) {
 			
-			setNums[i] = i + 1;
+			setNums[i] = theStart + i;
 		}
 		
 		//Generate all the Power sets 
@@ -43,7 +55,7 @@ public class tcss343 {
 			ArrayList<Integer> temp = new ArrayList<>();
 			sets.add(temp);
 			
-			for(int j = 0; j < length; j++) {
+			for(int j = theStart - 1; j < length; j++) {
 				if ((i & (1 << j)) > 0) {
 					sets.get(i).add(j + 1);
 				}
@@ -117,6 +129,44 @@ public class tcss343 {
 		return sets.get(leastSet);
 	}
 	
+	
+	/**
+	 * 
+	 * @param inputCosts matrix with rental costs.
+	 * @param theLeft left starting point.
+	 * @param theRight ending point.
+	 * @return the cheapest cost to rent a canoe form 1 to n.
+	 */
+	public static int divideAndConquer(int[][] inputCosts, int theLeft, int theRight) {
+		//TODO: Print cheapest sequence.
+		
+		ArrayList<Integer> costs = new ArrayList<Integer>();
+		ArrayList<Integer> sequences = new ArrayList<Integer>();
+		
+		//base case
+		if (theLeft == theRight){
+			return 0;
+			} else {
+			for (int i = theLeft + 1; i <= theRight; i++) {
+				
+				int rCost = divideAndConquer(inputCosts, i, theRight);
+				
+				int cost = inputCosts[theLeft][i] + rCost;
+				
+//				System.out.println("costs[" +(left + 1)+"]["+ (i+1) +"]  " + inputCosts[left][i]);
+//				System.out.print("\t" + cost + "\t" );
+				costs.add(cost);	
+			}
+		}
+		
+		//find minimum cost in list
+		int cheapest = costs.get(0);
+		for (Integer i: costs) {
+			if (i < cheapest) cheapest = i;
+		}
+		return cheapest;
+	}
+	
 	/** Dynamic programming solution to the problem
 	 * 
 	 * @param theStart Starting post
@@ -149,15 +199,16 @@ public class tcss343 {
 		prevSteps[1] = theStart; 
 		
 		//Initial Starting values 
-		leastTotals[0] = theCosts[theStart][theStart];
-		leastTotals[1] = theCosts[theStart][theStart + 1]; 
+		leastTotals[0] = theCosts[theStart - 1][theStart - 1];
+		leastTotals[1] = theCosts[theStart - 1][theStart]; 
 				
 		//For each step of 1->n check previous answers and get least		
 		for (int i = 2; i < theEnd - theStart + 1; i++) {
 			
 			//This is the leastStep, this will eventually be at the end of the loop the 
 			//total that was the smallest for that step. 
-			int leastStep = leastTotals[i - 1] + theCosts[i-1][i];
+			int leastStep = leastTotals[i - 1] + theCosts[posts[0]-1][posts[i] - 1];
+			//System.out.println("Checking: " + (posts[0] - 1) + " and " + (posts[i] - 1) + " = " + leastStep);
 			prevSteps[i] = i;
 			
 			//Go through all the past steps previous lowest solutions
@@ -239,8 +290,204 @@ public class tcss343 {
 		
 		System.out.print(" Total is " + tempForTotal);
 	}
+	
+	
+	/**
+	 * Generate a cost table of size n x n where n: 25, 50, 100, 200, 400, 800
+	 * There are two scenarios: * costs are entirely random.
+	 * 							* costs are random but increasing along each row.
+	 * 
+	 * @param theName name of the file.
+	 * @param theSize number of posts.
+	 * @param theType increasing: for random increasing costs.
+	 * 				  random: for random positive costs.
+	 */	
+	public static void generateCostTable(String theName, int theSize, String theType) {
+		try {
+			BufferedWriter writer = new BufferedWriter(new FileWriter(theName));
+			
+			int tableSize = theSize * theSize;
+			int incCost = 0;
+			
+			/* Random increasing rental costs.*/
+			if (theType.equals("increasing")) {
+				for (int i = 0; i < theSize; i++) {
+					for (int j= 0; j < theSize; j++) {
+						if (i > j) {
+							writer.write("NA");
+						} else if (i == j) {
+							writer.write("0");
+						} else {
+							incCost += random.nextInt(theSize);
+							writer.write(String.valueOf(incCost));
+						}
+						writer.write("\t");
+					}
+					writer.write("\n");
+				}
+			/*Random positive rental costs.*/	
+			} else if (theType.equals("random")) {
+				for (int i = 0; i < theSize; i++) {
+					for (int j = 0; j < theSize; j++) {
+						if (i > j) {
+							writer.write("NA");
+						} else if (i == j) {
+							writer.write("0");
+						} else {
+							writer.write(String.valueOf(random.nextInt(tableSize) + 1));
+						}
+						writer.write("\t");
+					}
+					writer.write("\n");
+				}
+			} else {
+				System.out.println("Please enter a valid table type (increasing or random)."); 
+			}
+			
+			writer.close();
+		} catch (FileNotFoundException e) {
+			System.out.println("File Not Found.");
+		} catch (IOException e) {
+			System.out.println("IO Exception");
+		}
+		
+	}
+	
+	
+	/**
+	 * Read in the text file the user and insert the costs into a matrix.
+	 * 
+	 * @param theName name of the file.
+	 * */
+	public static void createCostTable (String theName) {
+		ArrayList<Integer> input = new ArrayList<Integer>();
+		File file = new File(theName);
+		Scanner scanner = null;
+		try{
+			scanner = new Scanner (file);
+		} catch (FileNotFoundException e) {
+			
+		}
+		while (scanner.hasNext()) {
+			if (scanner.hasNextInt()) {
+				input.add(scanner.nextInt());
+				
+			} else if (scanner.hasNext("NA")) {
+				input.add(0);
+				scanner.next();
+			} else {
+				scanner.next();
+			}
+		}
+		
+		// Create the costs matrix
+		int size = (int) Math.sqrt(input.size());
+		int index = 0;
+		inputList = new int[size][size];
+		for (int i = 0; i < size && index < 17; i++) {
+			for (int j = 0; j < size; j++) {
+				inputList[i][j] = input.get(index);
+				index++;
+			}
+		}
+	}
+	
+	
+	public static void main(String... theArgs) {
+		
+		/*long bfStart, bfEnd, dcStart, dcEnd, dynamicStart, dynamicEnd;
+		
+		//TODO: Add running time.
+		
+		//Use the file that the user specifies in terminal.
+		if (theArgs.length == 0) {
+			// Read input text file
+			ArrayList<Integer> input = new ArrayList<Integer>();
+			Scanner scanner = new Scanner (System.in);
+			while (scanner.hasNext()) {
+				if (scanner.hasNextInt()) {
+					input.add(scanner.nextInt());
+				} else if (scanner.hasNext("NA")) {
+					input.add(0);
+					scanner.next();
+				} else {
+					scanner.next();
+				}
+			}
+			scanner.close();
+			
+			//Create the cost table. 
+			int size = (int) Math.sqrt(input.size());
+			int index = 0;
+			inputList = new int[size][size];
+			for (int i = 0; i < size && index < 17; i++) {
+				for (int j = 0; j < size; j++) {
+					inputList[i][j] = input.get(index);
+					index++;
+				}
+			}
+		}
+		
+		 Generate a cost table using the arguments the user passes in.
+		 * Terminal Command: java tcss343 generate.		
+		 
+		else {
+//			String filename = theArgs[0];
+//			int tableSize = Integer.parseInt(theArgs[1]);
+//			String tableType = theArgs[2];
+			
+			System.out.print("Enter filename: ");
+			Scanner sc = new Scanner(System.in);
+			String filename = sc.nextLine();
+			
+			System.out.print("Enter the size of the table: ");
+			int tableSize = 0;
+			try{
+				tableSize = Integer.parseInt(sc.nextLine());
+			} catch (IllegalArgumentException e) {
+				System.out.println("Please enter a valid number");
+			}
+			
+			System.out.print("Enter table type (increaseing/random): ");
+			String tableType = sc.nextLine();
 
-	public static void main(String[] args) {
+			generateCostTable(filename, tableSize, tableType);
+			createCostTable(filename);
+		}
+
+		
+		int i = 1;
+		int n = inputList.length;
+		
+		//Brute Force 
+		System.out.println("\nBrute Force");
+		bfStart = System.nanoTime();
+		ArrayList<Integer> solution = bruteForce(i, n, inputList);
+		bfEnd = System.nanoTime();
+		System.out.print("\nSoultion is [");
+		for(int a = 0; a < solution.size() - 1; a++) {
+			System.out.print(" " + solution.get(a));
+		}
+		System.out.print("]");
+		System.out.println("\nTotal is " + solution.get(solution.size() - 1));
+		System.out.println("Brute force running time: " + (bfEnd - bfStart)/ 1000000 + " ms");
+		
+		
+		 //Divide and Conquer 
+		dcStart = System.nanoTime();
+		int result = divideAndConquer(inputList, 0, n - 1);
+		dcEnd = System.nanoTime();
+		System.out.println("\nDivide and Conquer");
+		System.out.println("Cheapest:" + result);
+		System.out.println("Divide and Conquer running time: " + (dcEnd - dcStart)/ 1000000 + " ms");
+		
+		
+		 //Dynamic 
+		dynamicStart = System.nanoTime();
+		printStack(dynamic(i,n,inputList));
+		dynamicEnd = System.nanoTime();
+		
+		System.out.println("Dynamic running time: " + (dynamicEnd - dynamicStart)/ 1000000 + " ms");*/
 		
 		int[][] costs = new int[][]{{0, 2, 3, 7, 8},
 			   						{0, 0, 2, 4, 6},
@@ -255,20 +502,36 @@ public class tcss343 {
 				                     {0, 0, 0, 0, 2, 6},
 				                     {0, 0, 0, 0, 0, 2},
 				                     {0, 0, 0, 0, 0, 0}};
+				                   
+        int[][] costs3 = new int[][]     {{0, 3, 5, 23, 54, 65, 234, 12, 67, 12, 23, 12},
+        								  {0, 0, 23, 12, 12, 23, 34, 45, 98, 34, 34, 534},
+        								  {0, 0, 0, 43, 23, 432, 12, 65, 12, 65, 345, 23},
+        								  {0, 0, 0, 0, 12, 54, 23, 34, 65, 98, 56, 12},
+        								  {0, 0, 0, 0, 0, 12, 12, 23, 54, 234, 345, 432},
+        								  {0, 0, 0, 0, 0, 0, 43, 54, 12, 123, 324, 23},
+        								  {0, 0, 0, 0, 0, 0, 0, 23, 12, 543, 3454, 112},
+        								  {0, 0, 0, 0, 0, 0, 0, 0, 23, 5634, 213, 23},
+        								  {0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 34, 23},
+        								  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 123, 12},
+        								  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2},
+        								  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,}};
+        
+		int s = 1;
+		int e = 6;
 
-		int i = 1;
-		int j = 6;
-
-		ArrayList<Integer> solution = bruteForce(i, j, costs2);
+		ArrayList<Integer> bruteSol = bruteForce(s, e, costs3);
 		System.out.print("Soultion is [");
-		for(int a = 0; a < solution.size() - 1; a++) {
-			System.out.print(" " + solution.get(a));
+		for(int a = 0; a < bruteSol.size() - 1; a++) {
+			System.out.print(" " + bruteSol.get(a));
 		}
 		
-		System.out.print("]" + " Total is " + solution.get(solution.size() - 1));
+		System.out.print("]" + " Total is " + bruteSol.get(bruteSol.size() - 1));
+		
+		//Recursion part
+		System.out.println("\n\nRecursion: " + divideAndConquer(costs3, s - 1, e - 1));
 	
 		//Print Dynamic solution
-		printStack(dynamic(i,j,costs2));
+		printStack(dynamic(s,e,costs3));
 	}
 
 }
